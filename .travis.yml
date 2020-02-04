@@ -1,0 +1,28 @@
+dist: bionic
+language: c
+
+os:
+  - linux
+
+compiler:
+  - gcc
+
+matrix:
+  include:
+    - compiler: gcc
+      env: BUILD_TYPE=Debug BUILD_TESTS=1
+
+    - compiler: gcc
+      env: BUILD_TYPE=Release BUILD_TESTS=0
+
+cache:
+  ccache: true
+  apt: true
+
+script:
+    - mkdir build
+    - cd build
+    - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_TEST=$BUILD_TESTS ..
+    - cmake --build .
+    - ctest -V
+

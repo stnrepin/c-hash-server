@@ -19,7 +19,7 @@ foreach(TEST_FILE ${TEST_LIB_SOURCE_FILES})
 
     add_executable(${EXECUTABLE_NAME} ${TEST_FILE})
     target_link_libraries(${EXECUTABLE_NAME}
-                          hash-server_test_lib hash-server-lib)
+                          hash-server_test_lib hash-server_lib)
 
     set(TEST_NAME ${TEST_FILE_NAME})
     add_test(${TEST_NAME} ${EXECUTABLE_NAME})
