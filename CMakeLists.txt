@@ -6,7 +6,7 @@ project(hash-server LANGUAGES C)
 #
 #add_subdirectory(external/...)
 
-if (BUILD_TEST)
+if (BUILD_TESTS)
     add_definitions(-DUNIT_TEST=1)
 endif()
 
@@ -16,11 +16,10 @@ set_target_properties(hash-server
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
 )
 
-if(BUILD_TEST)
+if(BUILD_TESTS)
     enable_testing()
 
     add_subdirectory("external/Unity")
-
     add_subdirectory("test")
 endif()
 
