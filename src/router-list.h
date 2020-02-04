@@ -7,7 +7,7 @@
 
 typedef struct RouterListNode_ {
     Router *router;
-    RouterListNode_ *next;
+    struct RouterListNode_ *next;
 } RouterListNode;
 
 RouterListNode *RouterListNode_new(Router *r);
