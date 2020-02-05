@@ -1,0 +1,66 @@
+#include "socket.h"
+
+#include <string.h>
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+
+#include "config.h"
+#include "hash-server-error.h"
+
+error_t socket_open(socket_t *sock) {
+    *sock = socket(PF_INET, SOCK_STREAM, 0);
+    return SUCC_OR_ERR(*sock != -1, E_SOCKET_OPEN) ;
+}
+
+error_t socket_close(socket_t st) {
+    int rc;
+    rc = close(st);
+    return SUCC_OR_ERR(rc != -1, E_SOCKET_CLOSE);
+}
+
+error_t socket_init_server(socket_t sock) {
+    int rc;
+    struct sockaddr_in addr;
+
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(SERVER_PORT);
+    addr.sin_addr.s_addr = inet_addr(SERVER_HOST);
+    memset(addr.sin_zero, '\0', sizeof(addr.sin_zero));
+
+    rc = bind(sock, (struct sockaddr *) &addr, sizeof(struct sockaddr_in));
+    if (rc != -1) {
+        return E_SOCKET_BIND;
+    }
+
+    rc = listen(sock, MAX_PARALLEL_CONN_COUNT);
+    if (rc != -1) {
+        return E_SOCKET_LISTEN;
+    }
+
+    return SUCCESS;
+}
+
+error_t socket_get_client(socket_t serv_sock, socket_t *client_sock) {
+    struct sockaddr_storage storage;
+    socklen_t addr_size = sizeof(struct sockaddr_storage);
+
+    *client_sock = accept(serv_sock, (struct sockaddr *) &storage, &addr_size);
+
+    return SUCC_OR_ERR(*client_sock != -1, E_SOCKET_ACCEPT);
+}
+
+error_t socket_receive_data(socket_t sock, char *buff, size_t buff_size) {
+    // TODO: Difference between ssite_t and size_t?
+    ssize_t received_byte_count;
+    received_byte_count = recv(sock , buff , buff_size , 0);
+    return SUCC_OR_ERR(received_byte_count != -1, E_SOCKET_RECEIVE);
+}
+
+error_t socket_send_data(socket_t sock, const char *buff, size_t buff_size) {
+    ssize_t sent_byte_count;
+    sent_byte_count = send(sock, buff, buff_size, 0);
+    return SUCC_OR_ERR(sent_byte_count != -1, E_SOCKET_SEND);
+}

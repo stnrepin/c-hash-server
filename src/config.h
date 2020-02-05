@@ -1,6 +1,10 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define HTTP_SERVER_PORT 3000
+#define SERVER_PORT 3000
+#define SERVER_HOST "127.0.0.1"
+
+#define MAX_HTTP_REQ_RES_BUFFER_SIZE 2000
+#define MAX_PARALLEL_CONN_COUNT 1000
 
 #endif // !CONFIG_H

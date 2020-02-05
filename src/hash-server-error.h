@@ -4,9 +4,16 @@
 #define SUCCESS (error_t)0
 #define FAIL(e) (e != SUCCESS)
 #define SUCC(e) (e == SUCCESS)
+#define SUCC_OR_ERR(cond, err) (SUCCESS ? (cond) : err)
 
 typedef enum {
-    E_ALLOC = 1,
+    E_SOCKET_OPEN = 201,
+    E_SOCKET_CLOSE = 202,
+    E_SOCKET_BIND = 203,
+    E_SOCKET_LISTEN = 204,
+    E_SOCKET_ACCEPT = 205,
+    E_SOCKET_RECEIVE = 206,
+    E_SOCKET_SEND = 207,
 } error_t;
 
 /*
