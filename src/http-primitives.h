@@ -7,32 +7,34 @@
 #include "hash-server-error.h"
 
 typedef enum {
-    OK = 200,
-    NOT_FOUND = 404,
+    HTTP_CODE_OK = 200,
+    HTTP_CODE_NOT_FOUND = 404,
     /* Others are not implemented. */
 } HttpCode;
 
 typedef enum {
-    PLAIN_TEXT,
-    APPLICATION_JSON,
+    CONTENT_TYPE_PLAIN_TEXT,
+    CONTENT_TYPE_APPLICATION_JSON,
     /* Others are not implemented. */
 } ContentType;
 
 typedef struct {
-    const char *data;
-    size_t data_size;
-    ContentType cont_type;
-    bool is_end;
+    const char *data;           ///< Response message, C-string.
+    size_t data_size;           ///< Response message string buffer size.
+    size_t data_len;            ///< Response message actual string len.
+    ContentType cont_type;      ///< Content type of the message.
+    bool is_end;                ///< Determine if Response has already
+                                ///< been sent to client.
 } Response;
 
 Response *Response_new(size_t init_data_sz);
-error_t Response_send(const char *data, size_t sz);
-error_t Response_set_content_type(ContentType cont_type);
-error_t Response_write(const char *data);
-error_t Response_end(HttpCode code);
+error_t Response_send(Response *res, const char *data, size_t sz);
+error_t Response_set_content_type(Response *res, ContentType cont_type);
+error_t Response_write(Response *res, const char *data);
+error_t Response_end(Response *res, HttpCode code);
 
 typedef enum {
-    POST,
+    METHOD_POST,
     /* Others are not implemented. */
 } RequestMethod;
 

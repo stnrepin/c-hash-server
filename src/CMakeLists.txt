@@ -11,6 +11,10 @@ add_executable(hash-server "main.c")
 
 if(SRC_FILES)
 add_library(hash-server_lib STATIC ${SRC_FILES})
+target_include_directories(hash-server_lib
+    PUBLIC
+    "${CMAKE_CURRENT_LIST_DIR}"
+)
 target_link_libraries(hash-server hash-server_lib)
 endif()
 

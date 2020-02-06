@@ -6,7 +6,19 @@
 #define SUCC(e) (e == SUCCESS)
 #define SUCC_OR_ERR(cond, err) (SUCCESS ? (cond) : err)
 
+#define TRY(func_call) { \
+    err = func_call;     \
+    if (FAIL(err)) {     \
+        return err;      \
+    }                    \
+}
+
+#define ERROR_MESSAGE_STRING_FORMAT "Error: %s. Code: %d\n"
+#define ERROR_PANIC_MESSAGE_STRING_FORMAT "Fatal error: %s. Code: %d\n"
+
 typedef enum {
+    E_NOT_IMPLEMENTED = 1,
+
     E_SOCKET_OPEN = 201,
     E_SOCKET_CLOSE = 202,
     E_SOCKET_BIND = 203,
@@ -14,6 +26,10 @@ typedef enum {
     E_SOCKET_ACCEPT = 205,
     E_SOCKET_RECEIVE = 206,
     E_SOCKET_SEND = 207,
+
+    E_JSON_BAD_FORMAT = 301,
+    E_JSON_DECODE_RANGE = 302,
+    E_JSON_ENCODE_RANGE = 303,
 } error_t;
 
 /*
@@ -25,9 +41,6 @@ void print_error(error_t err);
 
 void panic(error_t err);
 
-/*
- * Prints with format "{prefix}{get_error_message(err)}"
- */
-void print_error_internal(const char *prefix, error_t err);
+void print_error_internal(const char *format, error_t err);
 
 #endif // !HASH_SERVER_ERROR_H
