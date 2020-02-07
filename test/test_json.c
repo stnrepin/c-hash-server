@@ -18,7 +18,7 @@ TEAR_DOWN_STUB();
  */
 void should_decode_basic() {
     error_t err;
-    /*const*/ char *str;
+    char *str;
     char value[MAX_VALUE_SIZE];
 
     // The simplest case
@@ -40,7 +40,7 @@ void should_decode_basic() {
     TEST_ASSERT_EQUAL_STRING("", value);
 
     // Escaped "
-    str = "{\"k\\\"ey\": \"12\"34\"}";
+    str = "{\"k\\\"ey\": \"12\\\"34\"}";
     err = json_decode_single_pair(str, "k\"ey", value, MAX_VALUE_SIZE);
     TEST_ASSERT_EQUAL(SUCCESS, err);
     TEST_ASSERT_EQUAL_STRING("12\"34", value);
@@ -63,7 +63,7 @@ void should_decode_basic() {
  */
 void should_return_error_if_decode_invalid_json() {
     error_t err;
-    /*const*/ char *str;
+    char *str;
     char value[MAX_VALUE_SIZE];
 
     // Missed ""
@@ -104,7 +104,7 @@ void should_return_error_if_decode_invalid_json() {
  */
 void should_not_decode_complex_json() {
     error_t err;
-    /*const*/ char *str;
+    char *str;
     char value[MAX_VALUE_SIZE];
 
     str = "{\"key1\": \"1234\", \"key2\": \"value\"}";
@@ -121,7 +121,7 @@ void should_not_decode_complex_json() {
  */
 void should_return_error_if_key_not_found_on_decode() {
     error_t err;
-    /*const*/ char *str;
+    char *str;
     char value[MAX_VALUE_SIZE];
     str = "{\"key\": \"1234\"}";
     err = json_decode_single_pair(str, "not-exist-key", value, MAX_VALUE_SIZE);
@@ -138,7 +138,7 @@ void should_return_error_if_key_not_found_on_decode() {
 void should_handle_out_of_range_on_decode() {
     error_t err;
     const int VALUE_SIZE = 3;
-    /*const*/ char *str;
+    char *str;
     char value[VALUE_SIZE];
 
     // The simplest case
@@ -183,14 +183,19 @@ void should_encode_basic() {
  */
 void should_handle_out_of_range_on_encode() {
     error_t err;
-    const int STR_SIZE = 5;
-    char str[STR_SIZE],
+    const int STR1_SIZE = 15; // Not enough space for '\0'
+    const int STR2_SIZE = 7;
+    char str1[STR1_SIZE],
+         str2[STR2_SIZE],
          *key,
          *val;
     
-    key = "key";
+    key = "ke\ny";
     val = "val";
-    err = json_encode_single_pair(str, STR_SIZE, key, val);
+
+    err = json_encode_single_pair(str1, STR1_SIZE, key, val);
+    TEST_ASSERT_EQUAL(E_JSON_ENCODE_RANGE, err);
+    err = json_encode_single_pair(str2, STR2_SIZE, key, val);
     TEST_ASSERT_EQUAL(E_JSON_ENCODE_RANGE, err);
 }
 
