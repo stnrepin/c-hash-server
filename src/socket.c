@@ -1,6 +1,8 @@
 #include "socket.h"
 
 #include <string.h>
+#include <stdint.h>
+#include <stddef.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -21,22 +23,22 @@ error_t socket_close(socket_t st) {
     return SUCC_OR_ERR(rc != -1, E_SOCKET_CLOSE);
 }
 
-error_t socket_init_server(socket_t sock) {
+error_t socket_init_server(socket_t sock, uint16_t port, const char *host) {
     int rc;
     struct sockaddr_in addr;
 
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(SERVER_PORT);
-    addr.sin_addr.s_addr = inet_addr(SERVER_HOST);
+    addr.sin_port = htons(port);
+    addr.sin_addr.s_addr = inet_addr(host);
     memset(addr.sin_zero, '\0', sizeof(addr.sin_zero));
 
     rc = bind(sock, (struct sockaddr *) &addr, sizeof(struct sockaddr_in));
-    if (rc != -1) {
+    if (rc == -1) {
         return E_SOCKET_BIND;
     }
 
     rc = listen(sock, MAX_PARALLEL_CONN_COUNT);
-    if (rc != -1) {
+    if (rc == -1) {
         return E_SOCKET_LISTEN;
     }
 

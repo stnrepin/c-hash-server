@@ -2,21 +2,26 @@
 #define HTTP_SERVER_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
+#include "socket.h"
 #include "hash-server-error.h"
 #include "http-primitives.h"
-#include "router-list.h"
+#include "route-list.h"
 
 typedef void (*HttpServerOnStartCallback)();
 
 typedef struct {
-    RouterList *routes;
+    bool is_listening;
+    socket_t serv_sock;
+    RouteList *routes;
 } HttpServer;
 
-error_t HttpServer_init(HttpServer **srv);
-error_t HttpServer_free(HttpServer *srv);
-error_t HttpServer_post(HttpServer *srv, const char *path, RouterCallback *rc);
-error_t HttpServer_use(RouterCallback *rc);
-error_t HttpServer_listen(int16_t port, HttpServerOnStartCallback);
+void HttpServer_init(HttpServer *srv);
+void HttpServer_deinit(HttpServer *srv);
+void HttpServer_post(HttpServer *srv, const char *path, RouteCallback rc);
+void HttpServer_use(HttpServer *srv, RouteCallback rc);
+error_t HttpServer_listen(HttpServer *srv, uint16_t port, const char *host,
+                          HttpServerOnStartCallback ic);
 
 #endif // !HTTP_SERVER_H

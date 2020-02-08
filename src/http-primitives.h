@@ -8,7 +8,9 @@
 
 typedef enum {
     HTTP_CODE_OK = 200,
+    HTTP_CODE_NO_CONTENT = 204,
     HTTP_CODE_NOT_FOUND = 404,
+    HTTP_CODE_INTERNAL_ERROR = 500,
     /* Others are not implemented. */
 } HttpCode;
 
@@ -19,21 +21,22 @@ typedef enum {
 } ContentType;
 
 typedef struct {
-    const char *data;           ///< Response message, C-string.
+    char *data;           ///< Response message, C-string.
     size_t data_size;           ///< Response message string buffer size.
-    size_t data_len;            ///< Response message actual string len.
     ContentType cont_type;      ///< Content type of the message.
+    HttpCode code;              ///< Http code of result.
     bool is_end;                ///< Determine if Response has already
                                 ///< been sent to client.
 } Response;
 
-Response *Response_new(size_t init_data_sz);
-error_t Response_send(Response *res, const char *data, size_t sz);
-error_t Response_set_content_type(Response *res, ContentType cont_type);
-error_t Response_write(Response *res, const char *data);
-error_t Response_end(Response *res, HttpCode code);
+void Response_init(Response *res);
+void Response_deinit(Response *res);
+void Response_send(Response *res, const char *data, size_t sz);
+void Response_set_content_type(Response *res, ContentType ct);
+void Response_end(Response *res, HttpCode code);
 
 typedef enum {
+    METHOD_ALL,
     METHOD_POST,
     /* Others are not implemented. */
 } RequestMethod;
@@ -41,25 +44,25 @@ typedef enum {
 typedef struct {
     RequestMethod method;
     ContentType cont_type;
-    void *data;
+    char *data;
     size_t data_size;
 } Request;
 
-Request *Request_new(RequestMethod meth, ContentType cont_type,
-                     void *data, size_t data_size);
-void Request_free(Request *req);
+void Request_init(Request *req, RequestMethod m, ContentType ct, const char *data,
+                  size_t data_size);
+void Request_deinit(Request *req);
 
 // Yeah, there also should be Next, but I'm too lazy. 
-typedef error_t (*RouterCallback)(error_t, Request, Response);
+typedef error_t (*RouteCallback)(error_t, Request*, Response*);
 
 typedef struct {
     char *path;
     RequestMethod req_meth;
-    RouterCallback rc;
-} Router;
+    RouteCallback rc;
+} Route;
 
-Router *Route_new(const char *path, RequestMethod rm, RouterCallback rc);
-void Route_free(Router *r);
-error_t Route_satisfies_path(Router* r, const char *path, RequestMethod rm);
+void *Route_init(Route *r, const char *path, RequestMethod rm, RouteCallback rc);
+void Route_deinit(Route *r);
+bool Route_satisfies_path(Route* r, const char *path, RequestMethod rm);
 
 #endif // !HTTP_PRIMITIVES_H

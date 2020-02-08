@@ -4,7 +4,7 @@
 #define SUCCESS (error_t)0
 #define FAIL(e) (e != SUCCESS)
 #define SUCC(e) (e == SUCCESS)
-#define SUCC_OR_ERR(cond, err) (SUCCESS ? (cond) : err)
+#define SUCC_OR_ERR(cond, err) ((cond) ? SUCCESS : err)
 
 #define TRY(func_call) { \
     err = func_call;     \
@@ -18,6 +18,7 @@
 
 typedef enum {
     E_NOT_IMPLEMENTED = 1,
+    E_ALLOC = 2,
 
     E_SOCKET_OPEN = 201,
     E_SOCKET_CLOSE = 202,
