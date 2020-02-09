@@ -21,12 +21,12 @@ typedef enum {
 } ContentType;
 
 typedef struct {
-    char *data;           ///< Response message, C-string.
+    char *data;                 ///< Response message, C-string.
     size_t data_size;           ///< Response message string buffer size.
     ContentType cont_type;      ///< Content type of the message.
-    HttpCode code;              ///< Http code of result.
-    bool is_end;                ///< Determine if Response has already
-                                ///< been sent to client.
+    HttpCode code;              ///< Http code of the result.
+    bool is_end;                ///< Determine if the Response has already
+                                ///< been sent to a client.
 } Response;
 
 void Response_init(Response *res);

@@ -17,7 +17,6 @@ target_include_directories(hash-server_lib
     PUBLIC
     "${CMAKE_CURRENT_LIST_DIR}"
 )
-
 target_link_libraries(hash-server hash-server_lib)
 endif()
 

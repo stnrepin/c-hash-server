@@ -19,7 +19,8 @@ void RouteListNode_free(RouteListNode *n) {
     if (n == NULL) {
         return;
     }
-    //free(n->route); //!!!!!!
+    //free(n->route); // Note: RouteList DOES NOT manage routes.
+                      // If you allocate it, you should worry about free. 
     free(n);
 }
 

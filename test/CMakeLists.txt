@@ -17,4 +17,3 @@ foreach(TEST_FILE ${TEST_LIB_SOURCE_FILES})
     set(TEST_NAME ${TEST_FILE_NAME})
     add_test(${TEST_NAME} ${EXECUTABLE_NAME})
 endforeach()
-

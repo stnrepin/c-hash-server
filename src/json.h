@@ -43,8 +43,6 @@ static error_t get_escaped_symbol(char sym, char *esc);
 static error_t parse_comma_if_presented(const char **str);
 static error_t parse_symbol(const char **str, char sym);
 
-// The parser don't modify *str, but it isn't mark as 'const'
-// to make decoding algorithm easier. 
 error_t json_decode_single_pair(const char *str, const char *key,
                                 char *val, size_t val_size);
 
