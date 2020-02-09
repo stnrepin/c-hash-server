@@ -45,17 +45,6 @@ void HttpServer_use(HttpServer *srv, RouteCallback rc) {
     RouteList_add(srv->routes, &r);
 }
 
-void to_hex_str_fast(unsigned char num, char *str) {
-    // Compiler do replace % and / by binary opetations. Checked.
-    //
-    static const char HEX[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-    for (int i = 0; i < 2; i++) {
-        str[1-i] = HEX[num % 16];
-        num /= 16;
-    }
-    printf("%c%c\n", str[0], str[1]);
-}
-
 error_t HttpServer_listen(HttpServer *srv, uint16_t port, const char *host,
                           HttpServerOnStartCallback ic) {
     error_t err;
@@ -86,25 +75,30 @@ error_t HttpServer_listen(HttpServer *srv, uint16_t port, const char *host,
         Request req;
         err = Request_init_from_str(&req, data);
         if (FAIL(err)) {
-            print_error(err);
-            goto out_client;
+            Request_init(&req, "", METHOD_NO, CONTENT_TYPE_PLAIN_TEXT, "", 1);
         }
         Response res;
         Response_init(&res);
 
-        err = HttpServer_handle_request(srv, &req, &res);
+        err = HttpServer_handle_request(srv, err, &req, &res);
         if (FAIL(err)) {
             print_error(err);
-            goto out_client;
+            Response_deinit(&res);
+            Response_init(&res);
+            Response_end(&res, HTTP_CODE_INTERNAL_ERROR);
         }
 
         size_t data_size = 0;
-        Response_to_str(&res, data, MAX_HTTP_REQUEST_SIZE, &data_size); // Reuse data, so don't create yet another array.
+        // Reuse data, so don't create yet another array.
+        Response_to_str(&res, data, MAX_HTTP_REQUEST_SIZE, &data_size);
         err = socket_send_data(client_socket, data, data_size);
         if (FAIL(err)) {
             print_error(err);
             goto out_client;
         }
+
+        Request_deinit(&req);
+        Response_deinit(&res);
 
 out_client:
         err = socket_close(client_socket);
@@ -116,11 +110,9 @@ out_client:
     return SUCCESS;
 }
 
-error_t HttpServer_handle_request(HttpServer *serv, Request *req, Response *res) {
-    error_t err;
+error_t HttpServer_handle_request(HttpServer *serv, error_t err, Request *req, Response *res) {
     RouteListNode *cur;
 
-    err = SUCCESS;
     cur = serv->routes->head;
     while (cur != NULL) {
         if (Route_satisfies_path(cur->route, req->path, req->method)) {

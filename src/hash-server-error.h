@@ -20,6 +20,8 @@ typedef enum {
     E_NOT_IMPLEMENTED = 1,
     E_ALLOC = 2,
 
+    E_SERVER_HANDLER_NOT_FOUND = 101,
+
     E_SOCKET_OPEN = 201,
     E_SOCKET_CLOSE = 202,
     E_SOCKET_BIND = 203,
@@ -32,9 +34,9 @@ typedef enum {
     E_JSON_DECODE_RANGE = 302,
     E_JSON_ENCODE_RANGE = 303,
 
-    E_SERVER_HANDLER_NOT_FOUND = 401,
-
     E_RESPONSE_RANGE = 501,
+
+    E_REQUEST_BAD_FORMAT = 601,
 } error_t;
 
 /*

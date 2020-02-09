@@ -13,6 +13,17 @@
 #include "config.h"
 #include "json.h"
 
+void to_hex_str(unsigned char num, char *str) {
+    // Compiler do replace % and / by binary opetations. Checked.
+    //
+    static const char HEX[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
+                                  '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    for (int i = 0; i < 2; i++) {
+        str[1-i] = HEX[num % 16];
+        num /= 16;
+    }
+}
+
 error_t post_root_route(error_t err, Request *req, Response *res) {
     char *data, // The length of a request body can be variable so use heap.
          hash[SHA512_DIGEST_LENGTH],
@@ -24,9 +35,13 @@ error_t post_root_route(error_t err, Request *req, Response *res) {
         return err;
     }
 
+    if (req->cont_type != CONTENT_TYPE_APPLICATION_JSON) {
+        return E_ALLOC;
+    }
+
     printf("Request to '/'");
 
-    data = Request_get_body(req);
+    data = req->data;
     printf("Data: %s\n", data);
 
     SHA512(data, strlen(data), hash);

@@ -23,5 +23,6 @@ void HttpServer_post(HttpServer *srv, const char *path, RouteCallback rc);
 void HttpServer_use(HttpServer *srv, RouteCallback rc);
 error_t HttpServer_listen(HttpServer *srv, uint16_t port, const char *host,
                           HttpServerOnStartCallback ic);
-
+error_t HttpServer_handle_request(HttpServer *serv, error_t err, Request *req,
+                                  Response *res);
 #endif // !HTTP_SERVER_H

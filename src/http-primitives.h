@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 #include "hash-server-error.h"
+#include "config.h"
 
 typedef enum {
     HTTP_CODE_OK = 200,
@@ -14,11 +15,16 @@ typedef enum {
     /* Others are not implemented. */
 } HttpCode;
 
+const char *HttpCode_to_str(HttpCode c);
+
 typedef enum {
     CONTENT_TYPE_PLAIN_TEXT,
     CONTENT_TYPE_APPLICATION_JSON,
     /* Others are not implemented. */
 } ContentType;
+
+ContentType ContentType_from_str(const char *s);
+const char *ContentType_to_str(ContentType ct);
 
 typedef struct {
     char *data;                 ///< Response message, C-string.
@@ -40,14 +46,18 @@ void Response_end(Response *res, HttpCode code);
 typedef enum {
     METHOD_ALL,
     METHOD_POST,
+    METHOD_NO,
     /* Others are not implemented. */
 } RequestMethod;
 
+RequestMethod RequestMethod_from_str(const char *s);
+const char *RequestMethod_to_str(RequestMethod rm);
+
 typedef struct {
-    const char *path;
+    char path[MAX_URL_SIZE];
     RequestMethod method;
     ContentType cont_type;
-    char *data;
+    char data[MAX_HTTP_REQUEST_SIZE];
     size_t data_size;
 } Request;
 

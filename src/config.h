@@ -10,6 +10,9 @@
 
 #define MAX_PARALLEL_CONN_COUNT 1000
 
+// https://stackoverflow.com/a/417184
+#define MAX_URL_SIZE 2048
+
 #define MAX_HASHING_STRING_SIZE 1024
 
 #endif // !CONFIG_H
