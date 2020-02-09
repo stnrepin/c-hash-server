@@ -1,6 +1,7 @@
 #include "http-primitives.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 
@@ -16,6 +17,18 @@ void Response_init(Response *res) {
 
 void Response_deinit(Response *res) {
     free(res->data);
+}
+
+error_t Response_to_str(Response *res, char *str, size_t max_str_size,
+                        size_t *actual_str_size)
+{
+    int written;
+    written = snprintf(str, max_str_size-1, "HTTP/1.0 %d %s\r\n\r\n", res->code, get_phrase_by_code(res->code));
+    if (written + res->data_size > actual_str_size) {
+        return E_RESPONSE_RANGE;
+    }
+    memcpy(str+written, res->data, actual_str_size-written-1);
+    return SUCCESS;
 }
 
 void Response_send(Response *res, const char *data, size_t sz) {
@@ -38,9 +51,10 @@ void Response_end(Response *res, HttpCode code) {
     res->is_end = true;
 }
 
-void Request_init(Request *req, RequestMethod m, ContentType ct, const char *data,
+void Request_init(Request *req, const char *path, RequestMethod m, ContentType ct, const char *data,
                   size_t data_size)
 {
+    req->path = path; // Maybe malloc or static array?
     req->method = m;
     req->cont_type = ct;
     req->data_size = data_size;
@@ -50,6 +64,10 @@ void Request_init(Request *req, RequestMethod m, ContentType ct, const char *dat
     }
 
     memcpy(req->data, data, data_size);
+}
+
+error_t Request_init_from_str(Request *req, const char *str) {
+
 }
 
 void Request_deinit(Request *req) {

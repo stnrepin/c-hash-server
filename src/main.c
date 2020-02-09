@@ -14,19 +14,29 @@
 #include "json.h"
 
 error_t post_root_route(error_t err, Request *req, Response *res) {
-    char data[MAX_HASHING_STRING_SIZE],
-         hash[SHA512_DIGEST_LENGTH+1],
-         out[2+6+3+SHA512_DIGEST_LENGTH+2+1];
+    char *data, // The length of a request body can be variable so use heap.
+         hash[SHA512_DIGEST_LENGTH],
+         out[2+6+3+SHA512_DIGEST_LENGTH+2+1], // 2 - {", 6 - sha512,
+                                              // 3 - ":", 2 - "}, 1 - \0.
+         hash_str[513];
 
     if (FAIL(err)) {
         return err;
     }
 
     printf("Request to '/'");
-    json_decode_single_pair(res->data, "data", data, MAX_HASHING_STRING_SIZE);
+
+    data = Request_get_body(req);
+    printf("Data: %s\n", data);
+
     SHA512(data, strlen(data), hash);
-    hash[SHA512_DIGEST_LENGTH] = '\0';
-    json_encode_single_pair(out, sizeof(out), "sha512", hash);
+
+    for (int k = 0; k < SHA512_DIGEST_LENGTH; k++) {
+        to_hex_str(hash[k], hash_str+k*2);
+    }
+
+    TRY(json_encode_single_pair(out, 2+6+3+SHA512_DIGEST_LENGTH*2+2+1,
+            "sha512", hash_str));
 
     Response_send(res, out, sizeof(out));
 
@@ -59,9 +69,6 @@ void server_start() {
 
 int main(int argc, char **argv) {
     error_t err;
-    char data[MAX_HTTP_REQ_RES_BUFFER_SIZE];
-    socket_t server_socket;
-
     HttpServer serv;
 
     HttpServer_init(&serv);

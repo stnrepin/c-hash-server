@@ -10,10 +10,10 @@ compiler:
 matrix:
   include:
     - compiler: gcc
-      env: BUILD_TYPE=Debug BUILD_TESTS=1
+      env: BUILD_TYPE=Debug BUILD_TEST=1
 
     - compiler: gcc
-      env: BUILD_TYPE=Release BUILD_TESTS=0
+      env: BUILD_TYPE=Release BUILD_TEST=0
 
 cache:
   ccache: true
@@ -22,7 +22,6 @@ cache:
 script:
     - mkdir build
     - cd build
-    - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_TEST=$BUILD_TESTS ..
-    - cmake --build .
-    - ctest -V
-
+    - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_TEST=$BUILD_TEST ..
+    - cmake --build ..
+    - [[ -n $BUILD_TEST ]] && ctest -V

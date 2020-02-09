@@ -31,6 +31,10 @@ typedef enum {
     E_JSON_BAD_FORMAT = 301,
     E_JSON_DECODE_RANGE = 302,
     E_JSON_ENCODE_RANGE = 303,
+
+    E_SERVER_HANDLER_NOT_FOUND = 401,
+
+    E_RESPONSE_RANGE = 501,
 } error_t;
 
 /*

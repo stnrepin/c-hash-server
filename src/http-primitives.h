@@ -31,6 +31,8 @@ typedef struct {
 
 void Response_init(Response *res);
 void Response_deinit(Response *res);
+error_t Response_to_str(Response *res, char *str, size_t max_str_size,
+                        size_t *actual_str_size);
 void Response_send(Response *res, const char *data, size_t sz);
 void Response_set_content_type(Response *res, ContentType ct);
 void Response_end(Response *res, HttpCode code);
@@ -42,14 +44,16 @@ typedef enum {
 } RequestMethod;
 
 typedef struct {
+    const char *path;
     RequestMethod method;
     ContentType cont_type;
     char *data;
     size_t data_size;
 } Request;
 
-void Request_init(Request *req, RequestMethod m, ContentType ct, const char *data,
-                  size_t data_size);
+void Request_init(Request *req, const char *path, RequestMethod m,
+                  ContentType ct, const char *data, size_t data_size);
+error_t Request_init_from_str(Request *req, const char *str);
 void Request_deinit(Request *req);
 
 // Yeah, there also should be Next, but I'm too lazy. 

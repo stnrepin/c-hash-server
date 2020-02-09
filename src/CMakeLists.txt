@@ -7,9 +7,9 @@ file(GLOB_RECURSE SRC_FILES
 )
 list(REMOVE_ITEM SRC_FILES "main.c")
 
-
 add_executable(hash-server "main.c")
 target_link_libraries(hash-server OpenSSL::Crypto)
+target_link_libraries(hash-server gost)
 
 if(SRC_FILES)
 add_library(hash-server_lib STATIC ${SRC_FILES})

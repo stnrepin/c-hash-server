@@ -4,12 +4,12 @@
 #define SERVER_PORT 3000
 #define SERVER_HOST "127.0.0.1"
 
-// The size of content must be specified by Content-Length
-//     https://www.w3.org/Protocols/HTTP/1.0/spec.html#POST
-#define MAX_HTTP_REQ_RES_BUFFER_SIZE 2000
-#define MAX_HTTP_HEADER_SIZE 8190 // Got from Apache.
+// Yes, we nicely must to read Content-Length and alloc
+// memory for data. But... but it is hard and error-prone enough.
+#define MAX_HTTP_REQUEST_SIZE (8*1024)
+
 #define MAX_PARALLEL_CONN_COUNT 1000
 
-#define MAX_HASHING_STRING_SIZE 1000
+#define MAX_HASHING_STRING_SIZE 1024
 
 #endif // !CONFIG_H

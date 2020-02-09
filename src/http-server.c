@@ -7,6 +7,8 @@
 #include <string.h>
 
 #include <openssl/sha.h>
+#include <openssl/crypto.h>
+#include <openssl/x509v3.h>
 
 #include "socket.h"
 #include "json.h"
@@ -44,18 +46,21 @@ void HttpServer_use(HttpServer *srv, RouteCallback rc) {
 }
 
 void to_hex_str_fast(unsigned char num, char *str) {
-    // Compiler do replace %, / by binary opetations. Checked.
+    // Compiler do replace % and / by binary opetations. Checked.
     //
-    const char HEX[16] = { '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-    for (int i = 0; i < 1; i++) {
-        str[i] = HEX[num % 16];
+    static const char HEX[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    for (int i = 0; i < 2; i++) {
+        str[1-i] = HEX[num % 16];
         num /= 16;
     }
+    printf("%c%c\n", str[0], str[1]);
 }
 
 error_t HttpServer_listen(HttpServer *srv, uint16_t port, const char *host,
                           HttpServerOnStartCallback ic) {
     error_t err;
+    // The method is big so I declair the vars near by the place they used.
+
     TRY(socket_open(&srv->serv_sock));
 
     TRY(socket_init_server(srv->serv_sock, port, host));
@@ -63,73 +68,39 @@ error_t HttpServer_listen(HttpServer *srv, uint16_t port, const char *host,
     ic();
 
     while(1) {
-        // Read header
-        // Get len of data and path and meth
-        // read data
-        // Create Request
-        // Create response
-        // Find route
-        //  execute handler (parse json, get hash, encode json)
-        // If response end and SUCC(error) then send throught socket
-        // find next route
-
-        char data[2000];
+        char data[MAX_HTTP_REQUEST_SIZE]; // Used for request and response.
         socket_t client_socket;
+
         err = socket_get_client(srv->serv_sock, &client_socket);
         if (FAIL(err)) {
             print_error(err);
             goto out_client; // That's the first time I use goto!
         }
 
-        err = socket_receive_data(client_socket, data, 2000);
+        err = socket_receive_data(client_socket, data, MAX_HTTP_REQUEST_SIZE);
         if (FAIL(err)) {
             print_error(err);
             goto out_client;
         }
 
-        size_t ds = strlen(data);
-        data[ds-2] = data[ds-1];
-        data[ds-1] = data[ds];
-        int i = 0;
-        for (i = 0; i < ds; i++) {
-            if (i > 1 && i < ds-1 &&
-                data[i-1] == '\r' &&
-                data[i] == '\n' &&
-                data[i+1] == '\r')
-            {
-                i += 3;
-                break;
-            }
-        }
-
-        for (int j = 0; (j+i) < ds; j++) {
-            data[j] = data[j+i];
-        }
-        data[i] = '\0';
-        printf("Received:\n%s\n", data);
-
-        unsigned char hash[SHA512_DIGEST_LENGTH+1];
-        char data_j[MAX_HASHING_STRING_SIZE],
-             out[2+6+3+SHA512_DIGEST_LENGTH+2+1];
-        err = json_decode_single_pair(data, "data", data_j, MAX_HASHING_STRING_SIZE);
+        Request req;
+        err = Request_init_from_str(&req, data);
         if (FAIL(err)) {
+            print_error(err);
             goto out_client;
         }
-        printf("Data: %s\n", data_j);
-        SHA512(data_j, strlen(data_j), hash);
-        hash[SHA512_DIGEST_LENGTH] = '\0';
-        printf("Hash: %s\n", hash);
-        printf("%02x %02x %02x\n", hash[0], hash[1], hash[2]);
-        char hash_str[513];
-        for (int k = 0; k < 64; k++) {
-            to_hex_str_fast(hash[k], hash_str+k*2);
-        }
-        json_encode_single_pair(out, 2+6+3+SHA512_DIGEST_LENGTH*2+2+1, "sha512", hash_str);
+        Response res;
+        Response_init(&res);
+
+        err = HttpServer_handle_request(srv, &req, &res);
         if (FAIL(err)) {
+            print_error(err);
             goto out_client;
         }
 
-        err = socket_send_data(client_socket, out, sizeof(out));
+        size_t data_size = 0;
+        Response_to_str(&res, data, MAX_HTTP_REQUEST_SIZE, &data_size); // Reuse data, so don't create yet another array.
+        err = socket_send_data(client_socket, data, data_size);
         if (FAIL(err)) {
             print_error(err);
             goto out_client;
@@ -143,4 +114,25 @@ out_client:
     }
     // Unreachable.
     return SUCCESS;
+}
+
+error_t HttpServer_handle_request(HttpServer *serv, Request *req, Response *res) {
+    error_t err;
+    RouteListNode *cur;
+
+    err = SUCCESS;
+    cur = serv->routes->head;
+    while (cur != NULL) {
+        if (Route_satisfies_path(cur->route, req->path, req->method)) {
+            err = cur->route->rc(err, req, res);
+        }
+        if (SUCC(err) && res->is_end) {
+            break;
+        }
+        cur = cur->next;
+    }
+    if (!res->is_end) {
+        return E_SERVER_HANDLER_NOT_FOUND;
+    }
+    return err;
 }

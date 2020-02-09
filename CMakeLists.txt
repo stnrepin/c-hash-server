@@ -2,16 +2,18 @@ cmake_minimum_required(VERSION 3.10)
 
 project(hash-server LANGUAGES C)
 
-# Build dependencies
-#
-#add_subdirectory(external/...)
-
 set(OPENSSL_USE_STATIC_LIBS TRUE)
 find_package(OpenSSL REQUIRED)
+
+# Build dependencies
+#
+add_subdirectory(external/openssl-gost)
 
 if (BUILD_TESTS)
     add_definitions(-DUNIT_TEST=1)
 endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c99 -Werror -Wall")
 
 add_subdirectory("src")
 set_target_properties(hash-server
