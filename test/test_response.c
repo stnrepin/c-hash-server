@@ -5,6 +5,7 @@
 #include "unity.h"
 
 #include "common-test-util.h"
+
 #include "http-primitives.h"
 #include "hash-server-error.h"
 

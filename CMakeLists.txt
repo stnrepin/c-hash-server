@@ -6,6 +6,9 @@ project(hash-server LANGUAGES C)
 #
 #add_subdirectory(external/...)
 
+set(OPENSSL_USE_STATIC_LIBS TRUE)
+find_package(OpenSSL REQUIRED)
+
 if (BUILD_TESTS)
     add_definitions(-DUNIT_TEST=1)
 endif()
@@ -15,6 +18,14 @@ set_target_properties(hash-server
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
 )
+
+find_package(OpenSSL REQUIRED)
+
+message("OpenSSL include dir: ${OPENSSL_INCLUDE_DIR}")
+message("OpenSSL libraries: ${OPENSSL_LIBRARIES}")
+
+include_directories(${OPENSSL_INCLUDE_DIR})
+list(APPEND LIB_LIST ${OPENSSL_LIBRARIES})
 
 if(BUILD_TESTS)
     enable_testing()

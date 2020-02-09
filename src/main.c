@@ -4,18 +4,32 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <openssl/sha.h>
+
 #include "socket.h"
 #include "http-server.h"
 #include "http-primitives.h"
 #include "hash-server-error.h"
 #include "config.h"
+#include "json.h"
 
 error_t post_root_route(error_t err, Request *req, Response *res) {
+    char data[MAX_HASHING_STRING_SIZE],
+         hash[SHA512_DIGEST_LENGTH+1],
+         out[2+6+3+SHA512_DIGEST_LENGTH+2+1];
+
     if (FAIL(err)) {
         return err;
     }
+
     printf("Request to '/'");
-    Response_send(res, "Hello", 5);
+    json_decode_single_pair(res->data, "data", data, MAX_HASHING_STRING_SIZE);
+    SHA512(data, strlen(data), hash);
+    hash[SHA512_DIGEST_LENGTH] = '\0';
+    json_encode_single_pair(out, sizeof(out), "sha512", hash);
+
+    Response_send(res, out, sizeof(out));
+
     return SUCCESS;
 }
 
@@ -56,7 +70,10 @@ int main(int argc, char **argv) {
     HttpServer_use(&serv, not_found_route);
     HttpServer_use(&serv, internal_error_route);
 
-    HttpServer_listen(&serv, SERVER_PORT, SERVER_HOST, server_start);
+    err = HttpServer_listen(&serv, SERVER_PORT, SERVER_HOST, server_start);
+    if (FAIL(err)) {
+        print_error(err);
+    }
 
     HttpServer_deinit(&serv);
 

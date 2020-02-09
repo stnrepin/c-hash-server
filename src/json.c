@@ -28,6 +28,7 @@ error_t json_decode_single_pair(const char *str, const char *key,
 
     TRY(parse_whitespace(&str));
     TRY(parse_symbol(&str, '}'));
+    TRY(parse_whitespace(&str));
     TRY(parse_symbol(&str, '\0'));
 
     return err;

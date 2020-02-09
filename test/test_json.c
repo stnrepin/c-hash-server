@@ -28,7 +28,7 @@ void should_decode_basic() {
     TEST_ASSERT_EQUAL_STRING("1234", value);
 
     // String with a lot of spaces
-    str = "   {\n\t\"key\": \"1234\",\n}";
+    str = "   {\n\t\"key\": \"1234\",\n}\n\r";
     err = json_decode_single_pair(str, "key", value, MAX_VALUE_SIZE);
     TEST_ASSERT_EQUAL(SUCCESS, err);
     TEST_ASSERT_EQUAL_STRING("1234", value);

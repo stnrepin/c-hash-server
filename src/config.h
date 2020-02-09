@@ -10,4 +10,6 @@
 #define MAX_HTTP_HEADER_SIZE 8190 // Got from Apache.
 #define MAX_PARALLEL_CONN_COUNT 1000
 
+#define MAX_HASHING_STRING_SIZE 1000
+
 #endif // !CONFIG_H
