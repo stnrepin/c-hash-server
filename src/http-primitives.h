@@ -18,7 +18,7 @@ typedef enum {
 const char *HttpCode_to_str(HttpCode c);
 
 typedef enum {
-    CONTENT_TYPE_PLAIN_TEXT,
+    CONTENT_TYPE_TEXT_PLAIN,
     CONTENT_TYPE_APPLICATION_JSON,
     /* Others are not implemented. */
 } ContentType;

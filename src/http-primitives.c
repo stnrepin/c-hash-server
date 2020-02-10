@@ -19,31 +19,33 @@ const char *HttpCode_to_str(HttpCode c) {
         case HTTP_CODE_INTERNAL_ERROR:
             return "Internal Server Error";
     }
-    return "<Not-Implemented>";
+    // Should never happen.
+    return "<NOT-IMPLEMENTED>";
 }
 
 ContentType ContentType_from_str(const char *s) {
-    if (strcmp(s, "application/json")) {
+    if (strcmp(s, "application/json") == 0) {
         return CONTENT_TYPE_APPLICATION_JSON;
     }
-    return CONTENT_TYPE_PLAIN_TEXT;
+    return CONTENT_TYPE_TEXT_PLAIN;
 }
 
 const char *ContentType_to_str(ContentType ct) {
     switch (ct) {
-        case CONTENT_TYPE_PLAIN_TEXT:
-            return "plain/text";
+        case CONTENT_TYPE_TEXT_PLAIN:
+            return "text/plain";
         case CONTENT_TYPE_APPLICATION_JSON:
             return "application/json";
     }
-    return "plain/text";
+    // Should never happen.
+    return "<NOT-IMPLEMENTED>";
 }
 
 void Response_init(Response *res) {
     res->data = NULL;
     res->code = HTTP_CODE_NO_CONTENT;
     res->data_size = 0;
-    res->cont_type = CONTENT_TYPE_PLAIN_TEXT;
+    res->cont_type = CONTENT_TYPE_TEXT_PLAIN;
     res->is_end = false;
 }
 
@@ -56,25 +58,35 @@ error_t Response_to_str(Response *res, char *str, size_t max_str_size,
 {
     int written;
     written = snprintf(str, max_str_size-1, "HTTP/1.0 %d %s\r\n",
-                            res->code, RequestMethod_to_str(res->code));
-    written += snprintf(str+written, max_str_size-1-written,
-                            "Content-Type: %s\r\n\r\n", HttpCode_to_str(res->cont_type));
+                            res->code, HttpCode_to_str(res->code));
+    if (res->data_size > 0) {
+        written += snprintf(str+written, max_str_size-1-written,
+                                "Content-Type: %s\r\n\r\n",
+                                ContentType_to_str(res->cont_type));
+    }
     if (written + res->data_size > max_str_size) {
         return E_RESPONSE_RANGE;
     }
 
-    memcpy(str+written, res->data, max_str_size-written-1);
-    *actual_str_size = written + res->data_size;
+    if (res->data_size > 0) {
+        memcpy(str+written, res->data, max_str_size-written-1);
+    }
+    *actual_str_size = written + (res->data_size > 0 ? res->data_size : 1);
     return SUCCESS;
 }
 
 void Response_send(Response *res, const char *data, size_t sz) {
     res->data_size = sz;
-    res->data = malloc(sz*sizeof(char));
-    if (res->data == NULL) {
-        panic(E_ALLOC);
+
+    // https://stackoverflow.com/a/1073175
+    //
+    if (sz > 0) {
+        res->data = malloc(sz*sizeof(char));
+        if (res->data == NULL) {
+            panic(E_ALLOC);
+        }
+        memcpy(res->data, data, sz);
     }
-    memcpy(res->data, data, sz);
 
     Response_end(res, HTTP_CODE_OK);
 }
@@ -89,18 +101,11 @@ void Response_end(Response *res, HttpCode code) {
 }
 
 RequestMethod RequestMethod_from_str(const char *s) {
-    if (strcmp(s, "POST")) {
+    if (strcmp(s, "POST") == 0) {
         return METHOD_POST;
     }
+    // If method is not supported.
     return METHOD_NO;
-}
-
-const char *RequestMethod_to_str(RequestMethod r) {
-    switch (r) {
-        case METHOD_POST:
-            return "POST";
-    }
-    return "<NOT-IMPLEMENTED>";
 }
 
 void Request_init(Request *req, const char *path, RequestMethod m, ContentType ct, const char *data,
@@ -115,6 +120,7 @@ void Request_init(Request *req, const char *path, RequestMethod m, ContentType c
 }
 
 error_t Request_init_from_str(Request *req, const char *str) {
+    // TODO: Can I extract while (1) {...} to a method?
     char buffer[255];
     RequestMethod meth;
 
@@ -144,12 +150,11 @@ error_t Request_init_from_str(Request *req, const char *str) {
             return E_REQUEST_BAD_FORMAT;
         }
         else if (*str == ' ') {
-            buffer[i++] = '\0';
-            strncpy(req->path, buffer, MAX_URL_SIZE);
+            req->path[i++] = '\0';
             str++;
             break;
         }
-        buffer[i++] = *(str++);
+        req->path[i++] = *(str++);
     }
     // Read protocol.
     //
@@ -171,7 +176,7 @@ error_t Request_init_from_str(Request *req, const char *str) {
     }
     // Read Content-type.
     //
-    req->cont_type = CONTENT_TYPE_PLAIN_TEXT;
+    req->cont_type = CONTENT_TYPE_TEXT_PLAIN;
     char *cont_type_key_str = strstr(str, "Content-Type: ");
     if (cont_type_key_str != NULL) {
         str = cont_type_key_str+14;
@@ -194,9 +199,12 @@ error_t Request_init_from_str(Request *req, const char *str) {
     //
     char *del_empty_line = strstr(str, "\n\r\n");
     if (del_empty_line == NULL) {
-        return E_REQUEST_BAD_FORMAT;
+        req->data[0] = '\0';
+        req->data_size = 0;
+        return SUCCESS;
     }
     str = del_empty_line + 3;
+    i = 0;
     while (1)
     {
         if (*str == '\0') {
@@ -211,7 +219,7 @@ error_t Request_init_from_str(Request *req, const char *str) {
 }
 
 void Request_deinit(Request *req) {
-    //free(req->data);
+
 }
 
 void *Route_init(Route *r, const char *path, RequestMethod rm, RouteCallback rc) {
@@ -227,7 +235,6 @@ void Route_deinit(Route *r) {
         return;
     }
     free(r->path);
-    free(r);
 }
 
 bool Route_satisfies_path(Route *r, const char *path, RequestMethod rm) {

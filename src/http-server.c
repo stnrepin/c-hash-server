@@ -75,7 +75,7 @@ error_t HttpServer_listen(HttpServer *srv, uint16_t port, const char *host,
         Request req;
         err = Request_init_from_str(&req, data);
         if (FAIL(err)) {
-            Request_init(&req, "", METHOD_NO, CONTENT_TYPE_PLAIN_TEXT, "", 1);
+            Request_init(&req, "", METHOD_NO, CONTENT_TYPE_TEXT_PLAIN, "", 0);
         }
         Response res;
         Response_init(&res);
