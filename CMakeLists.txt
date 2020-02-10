@@ -9,6 +9,8 @@ find_package(OpenSSL REQUIRED)
 #
 add_subdirectory(external/openssl-gost)
 
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DDEBUG")
+
 if (BUILD_TESTS)
     add_definitions(-DUNIT_TEST=1)
 endif()

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <signal.h>
 #include <openssl/sha.h>
 
 #include "socket.h"
@@ -26,7 +27,7 @@ void to_hex_str(unsigned char num, char *str) {
 }
 
 void get_sha512_as_str(const char *d, size_t ds, char *hash_str) {
-    char *hash[SHA512_DIGEST_LENGTH];
+    unsigned char hash[SHA512_DIGEST_LENGTH];
 
     SHA512(d, ds, hash);
     for (int k = 0; k < SHA512_DIGEST_LENGTH; k++) {
@@ -53,23 +54,22 @@ error_t post_root_route(error_t err, Request *req, Response *res) {
         return err;
     }
 
+    IF_DEBUG(printf("Request to '/' with %s\n", req->data));
+
     if (req->cont_type != CONTENT_TYPE_APPLICATION_JSON) {
         return E_ROUTE_CONTENT_TYPE;
     }
 
-    IF_DEBUG(printf("Request to '/'\n"));
-    IF_DEBUG(printf("Request: %s\n", req->data));
-
     TRY(json_decode_single_pair(req->data, DATA_KEY_NAME,
             data, JSON_IN_DATA_STR_SIZE));
 
-    get_sha512_str_as_str(req->data, req->data_size-1, sha512_hash_str);
+    get_sha512_as_str(data, strlen(data), sha512_hash_str);
 
     TRY(json_encode_single_pair(out, sizeof(out),
             SHA512_KEY_NAME, sha512_hash_str));
 
     Response_set_content_type(res, CONTENT_TYPE_APPLICATION_JSON);
-    Response_send(res, out, sizeof(out));
+    Response_send(res, out, strlen(out)+1);
 
     IF_DEBUG(printf("\n"));
 
@@ -98,7 +98,7 @@ error_t internal_error_route(error_t err, Request *req, Response *res) {
 }
 
 void server_start() {
-    printf("Server listening on %s:%d\n", SERVER_HOST, SERVER_PORT);
+    printf("Server listening on %s:%d\n\n", SERVER_HOST, SERVER_PORT);
 }
 
 int main(int argc, char **argv) {
@@ -118,5 +118,5 @@ int main(int argc, char **argv) {
 
     HttpServer_deinit(&serv);
 
-    return 0;
+    return (int)err;
 }

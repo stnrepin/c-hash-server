@@ -1,7 +1,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#if DEBUG
+#ifdef DEBUG
 #define IF_DEBUG(x) x
 #else
 #define IF_DEBUG(x)
