@@ -75,8 +75,8 @@ typedef struct {
     RouteCallback rc;
 } Route;
 
-void *Route_init(Route *r, const char *path, RequestMethod rm, RouteCallback rc);
-void Route_deinit(Route *r);
+Route *Route_new(const char *path, RequestMethod rm, RouteCallback rc);
+void Route_free(Route *r);
 bool Route_satisfies_path(Route* r, const char *path, RequestMethod rm);
 
 #endif // !HTTP_PRIMITIVES_H
