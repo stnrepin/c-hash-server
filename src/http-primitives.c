@@ -222,15 +222,25 @@ void Request_deinit(Request *req) {
 
 }
 
-void *Route_init(Route *r, const char *path, RequestMethod rm, RouteCallback rc) {
+Route *Route_new(const char *path, RequestMethod rm, RouteCallback rc) {
+    Route *r;
+    r = malloc(sizeof(Route));
+    if (r == NULL) {
+        panic(E_ALLOC);
+    }
     r->path = malloc((strlen(path) + 1) * sizeof(char));
+    if (r->path == NULL) {
+        panic(E_ALLOC);
+    }
     r->req_meth = rm;
     r->rc = rc;
 
     strcpy(r->path, path);
+
+    return r;
 }
 
-void Route_deinit(Route *r) {
+void Route_free(Route *r) {
     if (r == NULL) {
         return;
     }

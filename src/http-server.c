@@ -6,10 +6,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <openssl/sha.h>
-#include <openssl/crypto.h>
-#include <openssl/x509v3.h>
-
 #include "socket.h"
 #include "json.h"
 #include "hash-server-error.h"
@@ -23,26 +19,34 @@ void HttpServer_init(HttpServer *srv) {
 
 void HttpServer_deinit(HttpServer *srv) {
     error_t err;
+    RouteListNode *cur;
 
     if (srv->is_listening) {
         err = socket_close(srv->serv_sock);
         if (FAIL(err)) {
             print_error(err);
         }
+        srv->is_listening = false;
+    }
+
+    cur = srv->routes->head;
+    while (cur != NULL) {
+        Route_free(cur->route);
+        cur = cur->next;
     }
     RouteList_free(srv->routes);
 }
 
 void HttpServer_post(HttpServer *srv, const char *path, RouteCallback rc) {
-    Route r;
-    Route_init(&r, path, METHOD_POST, rc);
-    RouteList_add(srv->routes, &r);
+    Route *r;
+    r = Route_new(path, METHOD_POST, rc);
+    RouteList_add(srv->routes, r);
 }
 
 void HttpServer_use(HttpServer *srv, RouteCallback rc) {
-    Route r;
-    Route_init(&r, "*", METHOD_ALL, rc);
-    RouteList_add(srv->routes, &r);
+    Route *r;
+    r = Route_new("*", METHOD_ALL, rc);
+    RouteList_add(srv->routes, r);
 }
 
 error_t HttpServer_listen(HttpServer *srv, uint16_t port, const char *host,
@@ -51,6 +55,7 @@ error_t HttpServer_listen(HttpServer *srv, uint16_t port, const char *host,
     // The method is big so I declair the vars near by the place they used.
 
     TRY(socket_open(&srv->serv_sock));
+    srv->is_listening = true;
 
     TRY(socket_init_server(srv->serv_sock, port, host));
 
@@ -94,9 +99,10 @@ error_t HttpServer_listen(HttpServer *srv, uint16_t port, const char *host,
         err = socket_send_data(client_socket, data, data_size);
         if (FAIL(err)) {
             print_error(err);
-            goto out_client;
+            goto out_req_res;
         }
 
+out_req_res:
         Request_deinit(&req);
         Response_deinit(&res);
 

@@ -55,7 +55,6 @@ error_t socket_get_client(socket_t serv_sock, socket_t *client_sock) {
 }
 
 error_t socket_receive_data(socket_t sock, char *buff, size_t buff_size) {
-    // TODO: Difference between ssite_t and size_t?
     ssize_t received_byte_count;
     received_byte_count = recv(sock , buff , buff_size , 0);
     return SUCC_OR_ERR(received_byte_count != -1, E_SOCKET_RECEIVE);
