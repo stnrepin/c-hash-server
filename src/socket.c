@@ -26,11 +26,18 @@ error_t socket_close(socket_t st) {
 error_t socket_init_server(socket_t sock, uint16_t port, const char *host) {
     int rc;
     struct sockaddr_in addr;
+    int so_reuseaddr;
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
     addr.sin_addr.s_addr = inet_addr(host);
     memset(addr.sin_zero, '\0', sizeof(addr.sin_zero));
+
+    // Fix TIME_WAIT issue.
+    // See http://alas.matf.bg.ac.rs/manuals/lspe/snode=104.html
+    so_reuseaddr = 1;
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
+               &so_reuseaddr, sizeof(so_reuseaddr));
 
     rc = bind(sock, (struct sockaddr *) &addr, sizeof(struct sockaddr_in));
     if (rc == -1) {
