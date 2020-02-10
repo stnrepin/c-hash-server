@@ -98,7 +98,8 @@ error_t HttpServer_listen(HttpServer *srv, uint16_t port, const char *host,
         size_t data_size = 0;
         // Reuse data, so don't create yet another array.
         Response_to_str(&res, data, MAX_HTTP_REQUEST_SIZE, &data_size);
-        err = socket_send_data(client_socket, data, data_size);
+        // NOTE: Do not send '\0' byte.
+        err = socket_send_data(client_socket, data, data_size-1);
         if (FAIL(err)) {
             print_error(err);
             goto out_req_res;
