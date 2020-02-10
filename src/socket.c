@@ -61,9 +61,15 @@ error_t socket_get_client(socket_t serv_sock, socket_t *client_sock) {
     return SUCC_OR_ERR(*client_sock != -1, E_SOCKET_ACCEPT);
 }
 
-error_t socket_receive_data(socket_t sock, char *buff, size_t buff_size) {
+error_t socket_receive_data(socket_t sock, char *buff, size_t buff_size,
+                            size_t *buf_actual_size)
+{
     ssize_t received_byte_count;
     received_byte_count = recv(sock , buff , buff_size , 0);
+    if (received_byte_count == -1) {
+        return E_SOCKET_RECEIVE;
+    }
+    *buf_actual_size = received_byte_count;
     return SUCC_OR_ERR(received_byte_count != -1, E_SOCKET_RECEIVE);
 }
 
