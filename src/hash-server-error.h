@@ -37,6 +37,8 @@ typedef enum {
     E_RESPONSE_RANGE = 501,
 
     E_REQUEST_BAD_FORMAT = 601,
+
+    E_ROUTE_CONTENT_TYPE = 701,
 } error_t;
 
 /*

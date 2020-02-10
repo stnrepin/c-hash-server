@@ -21,6 +21,10 @@
 
 #include "hash-server-error.h"
 
+// For: {"key1":"data1","key2":"data2"}
+#define JSON_STRING_SIZE_FOR_TWO_PAIRS(key1_len, data1_len, key2_len, data2_len) \
+    (2 + key1_len + 3 + data1_len + 3 + key2_len + 3 + data2_len + 2 + 1)
+
 // See: https://www.json.org
 //
 #define ESCAPE_SYMBOLS_COUNT 9

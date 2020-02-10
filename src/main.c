@@ -18,42 +18,60 @@ void to_hex_str(unsigned char num, char *str) {
     //
     static const char HEX[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
                                   '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    // Each byte -- 2 symbols.
     for (int i = 0; i < 2; i++) {
         str[1-i] = HEX[num % 16];
         num /= 16;
     }
 }
 
+void get_sha512_as_str(const char *d, size_t ds, char *hash_str) {
+    char *hash[SHA512_DIGEST_LENGTH];
+
+    SHA512(d, ds, hash);
+    for (int k = 0; k < SHA512_DIGEST_LENGTH; k++) {
+        to_hex_str(hash[k], hash_str+k*2);
+    }
+}
+
 error_t post_root_route(error_t err, Request *req, Response *res) {
-    char *data, // The length of a request body can be variable so use heap.
-         hash[SHA512_DIGEST_LENGTH],
-         out[2+6+3+SHA512_DIGEST_LENGTH+2+1], // 2 - {", 6 - sha512,
-                                              // 3 - ":", 2 - "}, 1 - \0.
-         hash_str[513];
+    const char DATA_KEY_NAME[] = "data";
+    const char GOST_KEY_NAME[] = "gost";
+    const char SHA512_KEY_NAME[] = "sha512";
+    const int HASH_SHA512_STR_LEN = SHA512_DIGEST_LENGTH*2;
+    const int JSON_OUT_STR_SIZE = JSON_STRING_SIZE_FOR_TWO_PAIRS(
+                                    sizeof(GOST_KEY_NAME), HASH_SHA512_STR_LEN,
+                                    sizeof(SHA512_KEY_NAME), HASH_SHA512_STR_LEN);
+    const int JSON_IN_DATA_STR_SIZE = 1024+1;
+
+    char data[JSON_OUT_STR_SIZE],
+         out[JSON_OUT_STR_SIZE],
+         gost_hash_str[SHA512_DIGEST_LENGTH*2 + 1],
+         sha512_hash_str[SHA512_DIGEST_LENGTH*2 + 1];
 
     if (FAIL(err)) {
         return err;
     }
 
     if (req->cont_type != CONTENT_TYPE_APPLICATION_JSON) {
-        return E_ALLOC;
+        return E_ROUTE_CONTENT_TYPE;
     }
 
-    printf("Request to '/'");
+    IF_DEBUG(printf("Request to '/'\n"));
+    IF_DEBUG(printf("Request: %s\n", req->data));
 
-    data = req->data;
-    printf("Data: %s\n", data);
+    TRY(json_decode_single_pair(req->data, DATA_KEY_NAME,
+            data, JSON_IN_DATA_STR_SIZE));
 
-    SHA512(data, strlen(data), hash);
+    get_sha512_str_as_str(req->data, req->data_size-1, sha512_hash_str);
 
-    for (int k = 0; k < SHA512_DIGEST_LENGTH; k++) {
-        to_hex_str(hash[k], hash_str+k*2);
-    }
+    TRY(json_encode_single_pair(out, sizeof(out),
+            SHA512_KEY_NAME, sha512_hash_str));
 
-    TRY(json_encode_single_pair(out, 2+6+3+SHA512_DIGEST_LENGTH*2+2+1,
-            "sha512", hash_str));
-
+    Response_set_content_type(res, CONTENT_TYPE_APPLICATION_JSON);
     Response_send(res, out, sizeof(out));
+
+    IF_DEBUG(printf("\n"));
 
     return SUCCESS;
 }
@@ -62,7 +80,7 @@ error_t not_found_route(error_t err, Request *req, Response *res) {
     if (FAIL(err)) {
         return err;
     }
-    printf("404");
+    printf("404 at %s\n", req->path);
     Response_end(res, HTTP_CODE_NOT_FOUND);
     return SUCCESS;
 }
@@ -72,6 +90,7 @@ error_t internal_error_route(error_t err, Request *req, Response *res) {
         printf("internal_error_route called but there is no error");
     }
     else {
+        printf("Internal server");
         print_error(err);
     }
     Response_end(res, HTTP_CODE_INTERNAL_ERROR);
@@ -79,7 +98,7 @@ error_t internal_error_route(error_t err, Request *req, Response *res) {
 }
 
 void server_start() {
-    printf("Server listening at %s:%d\n", SERVER_HOST, SERVER_PORT);
+    printf("Server listening on %s:%d\n", SERVER_HOST, SERVER_PORT);
 }
 
 int main(int argc, char **argv) {
