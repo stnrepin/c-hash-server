@@ -21,7 +21,7 @@ void should_create_valid_response() {
 
     Response_init(&r);
 
-    TEST_ASSERT_EQUAL(CONTENT_TYPE_PLAIN_TEXT, r.cont_type);
+    TEST_ASSERT_EQUAL(CONTENT_TYPE_TEXT_PLAIN, r.cont_type);
     TEST_ASSERT_EQUAL(HTTP_CODE_NO_CONTENT, r.code);
     TEST_ASSERT_EQUAL(0, r.data_size);
     TEST_ASSERT_NULL(r.data);
@@ -30,6 +30,55 @@ void should_create_valid_response() {
     Response_deinit(&r);
 }
 
+void should_create_text_response() {
+    error_t err;
+    const int STR_SIZE = 100;
+    char str[STR_SIZE];
+    size_t str_act_size = 0;
+    Response r;
+
+    Response_init(&r);
+    Response_send(&r, "hello", 6);
+
+    err = Response_to_str(&r, str, STR_SIZE, &str_act_size);
+    TEST_ASSERT_TRUE(SUCC(err));
+    TEST_ASSERT_EQUAL_STRING("HTTP/1.0 200 OK\r\n" \
+                             "Content-Type: text/plain\r\n" \
+                             "\r\n" \
+                             "hello", str);
+    TEST_ASSERT_EQUAL(strlen(str)+1, str_act_size);
+
+    Response_deinit(&r);
+    Response_init(&r);
+    Response_send(&r, "{\"key\":\"data\"", 14);
+    Response_set_content_type(&r, CONTENT_TYPE_APPLICATION_JSON);
+
+    err = Response_to_str(&r, str, STR_SIZE, &str_act_size);
+    TEST_ASSERT_TRUE(SUCC(err));
+    TEST_ASSERT_EQUAL_STRING("HTTP/1.0 200 OK\r\n" \
+                             "Content-Type: application/json\r\n" \
+                             "\r\n" \
+                             "{\"key\":\"data\"", str);
+    TEST_ASSERT_EQUAL(strlen(str)+1, str_act_size);
+
+    Response_deinit(&r);
+    Response_init(&r);
+    Response_send(&r, "", 0);
+
+    err = Response_to_str(&r, str, STR_SIZE, &str_act_size);
+    TEST_ASSERT_TRUE(SUCC(err));
+    TEST_ASSERT_EQUAL_STRING("HTTP/1.0 200 OK\r\n", str);
+    TEST_ASSERT_EQUAL(strlen(str)+1, str_act_size);
+
+    Response_deinit(&r);
+    Response_init(&r);
+    Response_end(&r, HTTP_CODE_INTERNAL_ERROR);
+
+    err = Response_to_str(&r, str, STR_SIZE, &str_act_size);
+    TEST_ASSERT_TRUE(SUCC(err));
+    TEST_ASSERT_EQUAL_STRING("HTTP/1.0 500 Internal Server Error\r\n", str);
+    TEST_ASSERT_EQUAL(strlen(str)+1, str_act_size);
+}
 /*
  * Method: Response_set_content_type()
  */
@@ -39,8 +88,8 @@ void should_set_content_type() {
 
     Response_set_content_type(&r, CONTENT_TYPE_APPLICATION_JSON);
     TEST_ASSERT_EQUAL(CONTENT_TYPE_APPLICATION_JSON, r.cont_type);
-    Response_set_content_type(&r, CONTENT_TYPE_PLAIN_TEXT);
-    TEST_ASSERT_EQUAL(CONTENT_TYPE_PLAIN_TEXT, r.cont_type);
+    Response_set_content_type(&r, CONTENT_TYPE_TEXT_PLAIN);
+    TEST_ASSERT_EQUAL(CONTENT_TYPE_TEXT_PLAIN, r.cont_type);
 
     Response_deinit(&r);
 }
@@ -80,6 +129,7 @@ int main() {
     UNITY_BEGIN();
 
     RUN_TEST(should_create_valid_response);
+    RUN_TEST(should_create_text_response);
     RUN_TEST(should_set_content_type);
     RUN_TEST(should_end);
     RUN_TEST(should_send);
