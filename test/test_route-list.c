@@ -21,27 +21,27 @@ void should_create_list() {
 
 void  should_add_to_list() {
     RouteList *l;
-    Route r1, r2, r3;
+    Route *r1, *r2, *r3;
 
     l = RouteList_new();
-    Route_init(&r1, "r1", METHOD_ALL, NULL);
-    Route_init(&r2, "r2", METHOD_ALL, NULL);
-    Route_init(&r3, "r3", METHOD_ALL, NULL);
+    r1 = Route_new("r1", METHOD_ALL, NULL);
+    r2 = Route_new("r2", METHOD_ALL, NULL);
+    r3 = Route_new("r3", METHOD_ALL, NULL);
 
-    RouteList_add(l, &r1);
-    TEST_ASSERT_EQUAL(&r1, l->head->route);
-    TEST_ASSERT_EQUAL(&r1, l->last->route);
+    RouteList_add(l, r1);
+    TEST_ASSERT_EQUAL(r1, l->head->route);
+    TEST_ASSERT_EQUAL(r1, l->last->route);
     TEST_ASSERT_EQUAL(1, l->size);
 
-    RouteList_add(l, &r2);
-    TEST_ASSERT_EQUAL(&r1, l->head->route);
-    TEST_ASSERT_EQUAL(&r2, l->last->route);
+    RouteList_add(l, r2);
+    TEST_ASSERT_EQUAL(r1, l->head->route);
+    TEST_ASSERT_EQUAL(r2, l->last->route);
     TEST_ASSERT_EQUAL(2, l->size);
 
-    RouteList_add(l, &r3);
-    TEST_ASSERT_EQUAL(&r1, l->head->route);
-    TEST_ASSERT_EQUAL(&r2, l->head->next->route);
-    TEST_ASSERT_EQUAL(&r3, l->last->route);
+    RouteList_add(l, r3);
+    TEST_ASSERT_EQUAL(r1, l->head->route);
+    TEST_ASSERT_EQUAL(r2, l->head->next->route);
+    TEST_ASSERT_EQUAL(r3, l->last->route);
     TEST_ASSERT_EQUAL(3, l->size);
 
     RouteList_free(l);
