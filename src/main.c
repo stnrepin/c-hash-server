@@ -40,11 +40,13 @@ void get_gost_as_str(const char *d, size_t ds, char *hash_str) {
     unsigned char hash[GOST_DIGEST_LENGTH];
 
     gost_hash_ctx gost_ctx;
+    init_gost_hash_ctx(&gost_ctx, &GostR3411_94_CryptoProParamSet);
     start_hash(&gost_ctx);
     hash_block(&gost_ctx, d, ds);
     finish_hash(&gost_ctx, hash);
-    for (int k = 0; k < GOST_DIGEST_LENGTH; k++) {
-        to_hex_str(hash[k], hash_str+k*2);
+    // See main() in gostsum.c
+    for (int i = 0; i < 32; i++) {
+        sprintf(hash_str + 2 * i, "%02x", hash[31 - i]);
     }
 }
 
@@ -61,8 +63,8 @@ error_t post_root_route(error_t err, Request *req, Response *res) {
 
     char data[JSON_OUT_STR_SIZE],
          out[JSON_OUT_STR_SIZE],
-         gost_hash_str[SHA512_DIGEST_LENGTH*2 + 1],
-         sha512_hash_str[SHA512_DIGEST_LENGTH*2 + 1];
+         gost_hash_str[HASH_GOST_STR_LEN + 1],
+         sha512_hash_str[HASH_SHA512_STR_LEN + 1];
 
     if (FAIL(err)) {
         return err;

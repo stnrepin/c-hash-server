@@ -18,6 +18,7 @@ if (BUILD_TESTS)
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c99 -Werror -Wall")
+add_definitions(-D_GNU_SOURCE=1)
 
 add_subdirectory("src")
 set_target_properties(hash-server
