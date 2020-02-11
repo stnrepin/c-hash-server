@@ -63,6 +63,7 @@ error_t HttpServer_listen(HttpServer *srv, uint16_t port, const char *host,
 
     while(1) {
         char data[MAX_HTTP_REQUEST_SIZE]; // Used for request and response.
+        size_t data_len;
         socket_t client_socket;
 
         err = socket_get_client(srv->serv_sock, &client_socket);
@@ -71,11 +72,12 @@ error_t HttpServer_listen(HttpServer *srv, uint16_t port, const char *host,
             goto out_client; // That's the first time I use goto!
         }
 
-        err = socket_receive_data(client_socket, data, MAX_HTTP_REQUEST_SIZE);
+        err = socket_receive_data(client_socket, data, MAX_HTTP_REQUEST_SIZE, &data_len);
         if (FAIL(err)) {
             print_error(err);
             goto out_client;
         }
+        data[data_len] = '\0';
 
         Request req;
         err = Request_init_from_str(&req, data);
@@ -96,7 +98,8 @@ error_t HttpServer_listen(HttpServer *srv, uint16_t port, const char *host,
         size_t data_size = 0;
         // Reuse data, so don't create yet another array.
         Response_to_str(&res, data, MAX_HTTP_REQUEST_SIZE, &data_size);
-        err = socket_send_data(client_socket, data, data_size);
+        // NOTE: Do not send '\0' byte.
+        err = socket_send_data(client_socket, data, data_size-1);
         if (FAIL(err)) {
             print_error(err);
             goto out_req_res;
