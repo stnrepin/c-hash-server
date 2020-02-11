@@ -7,7 +7,9 @@ find_package(OpenSSL REQUIRED)
 
 # Build dependencies
 #
-add_subdirectory(external/openssl-gost)
+add_subdirectory("external/openssl-gost")
+# Gost CMake doen't add include directory like, e.g., Unity.
+target_include_directories(gost PUBLIC "external/openssl-gost")
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DDEBUG")
 
@@ -23,18 +25,9 @@ set_target_properties(hash-server
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
 )
 
-find_package(OpenSSL REQUIRED)
-
-message("OpenSSL include dir: ${OPENSSL_INCLUDE_DIR}")
-message("OpenSSL libraries: ${OPENSSL_LIBRARIES}")
-
-include_directories(${OPENSSL_INCLUDE_DIR})
-list(APPEND LIB_LIST ${OPENSSL_LIBRARIES})
-
 if(BUILD_TESTS)
     enable_testing()
 
     add_subdirectory("external/Unity")
     add_subdirectory("test")
 endif()
-

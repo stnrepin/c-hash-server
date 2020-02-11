@@ -19,4 +19,3 @@ target_include_directories(hash-server_lib
 )
 target_link_libraries(hash-server hash-server_lib)
 endif()
-

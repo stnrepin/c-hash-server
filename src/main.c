@@ -6,7 +6,7 @@
 
 #include <signal.h>
 #include <openssl/sha.h>
-#include <../external/openssl-gost/gosthash.h>
+#include "gosthash.h"
 
 #include "socket.h"
 #include "http-server.h"
