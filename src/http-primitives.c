@@ -187,7 +187,7 @@ error_t Request_init_from_str(Request *req, const char *str) {
     // Read Content-type.
     //
     req->cont_type = CONTENT_TYPE_TEXT_PLAIN;
-    char *cont_type_key_str = strstr(str, "Content-Type: ");
+    char *cont_type_key_str = strcasestr(str, "Content-Type: ");
     if (cont_type_key_str != NULL) {
         str = cont_type_key_str+14;
         i = 0;
@@ -255,7 +255,6 @@ void Route_free(Route *r) {
         return;
     }
     free(r->path);
-    free(r);
 }
 
 bool Route_satisfies_path(Route *r, const char *path, RequestMethod rm) {
