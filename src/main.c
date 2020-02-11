@@ -6,6 +6,7 @@
 
 #include <signal.h>
 #include <openssl/sha.h>
+#include <../external/openssl-gost/gosthash.h>
 
 #include "socket.h"
 #include "http-server.h"
@@ -35,14 +36,27 @@ void get_sha512_as_str(const char *d, size_t ds, char *hash_str) {
     }
 }
 
+void get_gost_as_str(const char *d, size_t ds, char *hash_str) {
+    unsigned char hash[GOST_DIGEST_LENGTH];
+
+    gost_hash_ctx gost_ctx;
+    start_hash(&gost_ctx);
+    hash_block(&gost_ctx, d, ds);
+    finish_hash(&gost_ctx, hash);
+    for (int k = 0; k < GOST_DIGEST_LENGTH; k++) {
+        to_hex_str(hash[k], hash_str+k*2);
+    }
+}
+
 error_t post_root_route(error_t err, Request *req, Response *res) {
     const char DATA_KEY_NAME[] = "data";
     const char GOST_KEY_NAME[] = "gost";
     const char SHA512_KEY_NAME[] = "sha512";
     const int HASH_SHA512_STR_LEN = SHA512_DIGEST_LENGTH*2;
+    const int HASH_GOST_STR_LEN = GOST_DIGEST_LENGTH*2;
     const int JSON_OUT_STR_SIZE = JSON_STRING_SIZE_FOR_TWO_PAIRS(
                                     sizeof(GOST_KEY_NAME), HASH_SHA512_STR_LEN,
-                                    sizeof(SHA512_KEY_NAME), HASH_SHA512_STR_LEN);
+                                    sizeof(SHA512_KEY_NAME), HASH_GOST_STR_LEN);
     const int JSON_IN_DATA_STR_SIZE = 1024+1;
 
     char data[JSON_OUT_STR_SIZE],
@@ -63,10 +77,23 @@ error_t post_root_route(error_t err, Request *req, Response *res) {
     TRY(json_decode_single_pair(req->data, DATA_KEY_NAME,
             data, JSON_IN_DATA_STR_SIZE));
 
-    get_sha512_as_str(data, strlen(data), sha512_hash_str);
+    size_t data_len = strlen(data);
+    get_sha512_as_str(data, data_len, sha512_hash_str);
+    get_gost_as_str(data, data_len, gost_hash_str);
 
     TRY(json_encode_single_pair(out, sizeof(out),
             SHA512_KEY_NAME, sha512_hash_str));
+    /*
+     * out+out_len-1 points to '}' (last) symbol in out
+     * So there are the following transformations:
+     *      {<pair1_json>} ->
+     *      {<pair1_json>{<pair2_json>} ->
+     *      {<pair1_json>,<pair2_json>}
+     */
+    size_t out_len = strlen(out);
+    TRY(json_encode_single_pair(out+out_len-1, sizeof(out)-out_len,
+            GOST_KEY_NAME, gost_hash_str))
+    out[out_len-1] = ',';
 
     Response_set_content_type(res, CONTENT_TYPE_APPLICATION_JSON);
     Response_send(res, out, strlen(out)+1);
@@ -80,19 +107,20 @@ error_t not_found_route(error_t err, Request *req, Response *res) {
     if (FAIL(err)) {
         return err;
     }
-    printf("404 at %s\n", req->path);
+    printf("404 at %s to %s\n\n", RequestMethod_to_str(req->method), req->path);
     Response_end(res, HTTP_CODE_NOT_FOUND);
     return SUCCESS;
 }
 
 error_t internal_error_route(error_t err, Request *req, Response *res) {
     if(SUCC(err)) {
-        printf("internal_error_route called but there is no error");
+        printf("internal_error_route called but there is no error\n");
     }
     else {
-        printf("Internal server");
+        printf("Internal server\n");
         print_error(err);
     }
+    printf("\n");
     Response_end(res, HTTP_CODE_INTERNAL_ERROR);
     return SUCCESS;
 }

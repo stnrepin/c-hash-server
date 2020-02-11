@@ -7,6 +7,8 @@
 #define IF_DEBUG(x)
 #endif
 
+#define GOST_DIGEST_LENGTH 32
+
 int main(int argc, char **argv);
 
 #endif // !MAIN_H
