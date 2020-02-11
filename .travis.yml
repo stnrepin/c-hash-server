@@ -10,7 +10,7 @@ compiler:
 addons:
   apt:
     packages:
-      - openssl
+    - openssl
 
 matrix:
   include:
@@ -19,6 +19,10 @@ matrix:
 
     - compiler: gcc
       env: BUILD_TYPE=Release BUILD_TEST=0
+
+cache:
+  ccache: true
+  apt: true
 
 script:
     - mkdir build

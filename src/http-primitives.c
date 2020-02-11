@@ -255,6 +255,7 @@ void Route_free(Route *r) {
         return;
     }
     free(r->path);
+    free(r);
 }
 
 bool Route_satisfies_path(Route *r, const char *path, RequestMethod rm) {
