@@ -108,6 +108,16 @@ RequestMethod RequestMethod_from_str(const char *s) {
     return METHOD_NO;
 }
 
+const char *RequestMethod_to_str(RequestMethod rm) {
+    switch (rm)
+    {
+        case METHOD_POST:
+            return "POST";
+    }
+    // Should never happen.
+    return "<NOT-IMPLEMENTED>";
+}
+
 void Request_init(Request *req, const char *path, RequestMethod m, ContentType ct, const char *data,
                   size_t data_size)
 {
