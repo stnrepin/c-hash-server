@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "thpool.h"
+
 #include "socket.h"
 #include "json.h"
 #include "hash-server-error.h"
@@ -61,8 +63,7 @@ error_t HttpServer_listen(HttpServer *srv, uint16_t port, const char *host,
 
     ic();
 
-    ThreadPool pool;
-    ThreadPool_init(&pool, MAX_PARALLEL_CONN_COUNT);
+    threadpool pool = thpool_init(MAX_PARALLEL_CONN_COUNT);
 
     while(1) {
         ClientHandlerArgs *args = malloc(sizeof(ClientHandlerArgs));
@@ -73,15 +74,15 @@ error_t HttpServer_listen(HttpServer *srv, uint16_t port, const char *host,
         if (FAIL(err)) {
             print_error(err);
         }
-        ThreadPool_run_task(&pool, HttpServer_handler_client_wrapper, args);
+        //ThreadPool_run_task(&pool, HttpServer_handler_client_wrapper, args);
     }
     // Unreachable.
     return SUCCESS;
 }
 
-void HttpServer_handler_client_wrapper(ClientHandlerArgs *args) {
+void HttpServer_handle_client_wrapper(ClientHandlerArgs *args) {
     error_t err;
-    err = HttpServer_handle_client(&args->server, args->client_socket);
+    err = HttpServer_handle_client(args->server, args->client_socket);
     if (FAIL(err)) {
         print_error(err);
     }
