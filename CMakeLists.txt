@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.10)
 
 project(hash-server LANGUAGES C)
 
-set(OPENSSL_USE_STATIC_LIBS TRUE)
 find_package(OpenSSL REQUIRED)
 
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
