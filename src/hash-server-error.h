@@ -40,6 +40,8 @@ typedef enum {
     E_REQUEST_BAD_FORMAT = 601,
 
     E_ROUTE_CONTENT_TYPE = 701,
+
+    E_THREAD_POOL = 801,
 } error_t;
 
 /*

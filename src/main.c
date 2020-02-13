@@ -25,6 +25,7 @@ void to_hex_str(unsigned char num, char *str) {
         str[1-i] = HEX[num % 16];
         num /= 16;
     }
+    str[2] = '\0';
 }
 
 void get_sha512_as_str(const char *d, size_t ds, char *hash_str) {
