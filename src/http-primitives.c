@@ -69,7 +69,7 @@ error_t Response_to_str(Response *res, char *str, size_t max_str_size,
     }
 
     if (res->data_size > 0) {
-        memcpy(str+written, res->data, max_str_size-written-1);
+        memcpy(str+written, res->data, res->data_size);
     }
     *actual_str_size = written + (res->data_size > 0 ? res->data_size : 1);
     return SUCCESS;
