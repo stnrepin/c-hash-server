@@ -5,6 +5,10 @@ project(hash-server LANGUAGES C)
 set(OPENSSL_USE_STATIC_LIBS TRUE)
 find_package(OpenSSL REQUIRED)
 
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads REQUIRED)
+
 # Build dependencies
 #
 add_subdirectory("external/openssl-gost")
