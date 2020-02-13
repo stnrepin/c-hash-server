@@ -69,6 +69,9 @@ error_t socket_receive_data(socket_t sock, char *buff, size_t buff_size,
     if (received_byte_count == -1) {
         return E_SOCKET_RECEIVE;
     }
+    else if (received_byte_count == 0) {
+        return E_SOCKET_NOT_AVAILABLE;
+    }
     *buf_actual_size = received_byte_count;
     return SUCC_OR_ERR(received_byte_count != -1, E_SOCKET_RECEIVE);
 }
