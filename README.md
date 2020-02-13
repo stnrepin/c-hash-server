@@ -1,6 +1,6 @@
 # Hash Server
 
-This repository contains source files for a simple HTTP server written in C99.
+This repository contains source files for a simple HTTP 1.0 server written in C99.
 
 The HTTP server gets JSON-string via POST-request, e.g.
 
@@ -10,24 +10,26 @@ The HTTP server gets JSON-string via POST-request, e.g.
 }
 ```
 
-And the server sends back JSON-string with sha512 and gost hashes for `data`:
+And the server sends back JSON-string with SHA512 and Gost (GOST R 34.11-94 CryptoPro)  hashes for `data`:
 
 ```json
 {
-    "sha512": "4adfbbf00cd146301af5f0661b55d13439a14f67555b6dd03ad55ccf5efc85c8
-        12347f1050f2e481620d7a7ba588a5df5f30bc04f896903ae09217a6ae6d4abd",
-    "gost": "b75a0ac84397a0b2329316e333a58338a32a0ec2cc6e0e9843f9cfa80eb696f0"
+    "sha512": "62f810d09eee0865f4bbd3fd98bce21a0724b280b02deaec2af5c57452d5ddd29c95024081ba4a6ad4dac06b61cb35810ccc69dc05d2183f06cc6e0bc7f2dbeb",
+    "gost": "7250b9eb1e8b82ef421babc4241aa7c752bec1f95c93f4702e2687e98693574a"
 }
 ```
 
-Program also uses external libraries: Unity (unit-tests), OpenSSL (hashes),
-pthead (concurrency)
+Program also uses external libraries: Unity (unit-tests), OpenSSL+gost-engine (hashes),
+pthead (concurrency), c-thread-pool (thread pool).
+
+Project is available on [Github](https://github.com/stnrepin/c-hash-server).
 
 ## Requirements
 
 * Linux
 * gcc
 * cmake (>=3.10.0)
+* libssl-dev (>= 1.1)
 
 The latest versions are recommended.
 
@@ -54,7 +56,7 @@ $ make
 ## Running
 
 ```bash
-$ ./bin/hash-server
+$ ../bin/hash-server
 ```
 
 ## Testing
@@ -62,12 +64,6 @@ $ ./bin/hash-server
 Run unit-tests with
 
 ```bash
-$ cmake test
-```
-
-Run integration-tests with
-
-```bash
-$ python3 test/run_integrations.py
+$ ctest -V
 ```
 
